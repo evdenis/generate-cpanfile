@@ -1,0 +1,38 @@
+#!/usr/bin/env perl
+
+use warnings;
+use strict;
+
+use File::Find::Rule;
+use Module::CoreList;
+use File::Slurp qw/read_file/;
+
+
+my $dir = @ARGV ? $ARGV[0] : '.';
+
+my $finder = File::Find::Rule->or
+   (
+      File::Find::Rule->file->executable->name( '*.pl' ),
+      File::Find::Rule->file->executable->grep( qr/^#!.*\bperl/, [ sub { 1 } ] ),
+      File::Find::Rule->file->name( '*.pm' ),
+   );
+
+
+my %imports;
+my %own;
+foreach ($finder->in($dir)) {
+   foreach (read_file($_)) {
+      if (m/\Ause\h++([\w:]++)/) {
+         $imports{$1}++
+      } elsif (m/\Apackage\h++([\w:]++)/) {
+         $own{$1}++
+      }
+   }
+}
+
+my @imports = sort grep { !(exists $own{$_} || Module::CoreList->is_core($_)) } keys %imports;
+
+foreach (@imports) {
+   print "requires '$_';\n"
+}
+
