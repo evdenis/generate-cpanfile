@@ -22,9 +22,9 @@ my %imports;
 my %own;
 foreach ($finder->in($dir)) {
    foreach (read_file($_)) {
-      if (m/\Ause\h++([\w:]++)/) {
+      if (m/use\h++([\w:]++)/ || m/require\h++([\w:]++)/ || m/([\w:]++)->import\(/) {
          $imports{$1}++
-      } elsif (m/\Apackage\h++([\w:]++)/) {
+      } elsif (m/package\h++([\w:]++)/) {
          $own{$1}++
       }
    }
